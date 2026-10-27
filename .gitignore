@@ -1,0 +1,36 @@
+# --- Gradle / Android build outputs ---
+*.iml
+.gradle/
+.kotlin/
+/local.properties
+/.idea
+.DS_Store
+build/
+/captures
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.hprof
+
+# --- Signing identity: NEVER commit ---
+# keystore.properties holds the keystore passwords; keystores/prism-dev.keystore is the pinned
+# development signing key that makes new builds installable in-place over older ones. Both must
+# be backed up privately, never pushed. Without them the build falls back to Gradle's default
+# debug key (see README "Repository notes" and docs/APP_UPDATES.md).
+keystore.properties
+keystores/
+
+# --- Python tooling ---
+__pycache__/
+*.pyc
+
+# --- Receiver / session output (large, private) ---
+/prism-live/
+/prism-data/
+/sessions/
+
+# --- Scratch files ---
+clean_status.txt

@@ -1,0 +1,19 @@
+# Normalize line endings: store all text files with LF in the repo.
+* text=auto
+
+# Ensure everything that matters stays readable across platforms.
+*.md text
+*.kt text
+*.kts text
+*.py text
+*.properties text
+*.xml text
+*.pro text
+
+# Windows batch files must keep CRLF.
+*.bat text eol=crlf
+
+# Binary artifacts are never normalized.
+*.keystore binary
+*.png binary
+*.jar binary

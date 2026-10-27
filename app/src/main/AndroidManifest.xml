@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ===== Local-network live link (phone -> PC receiver on the same LAN) ===== -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- The app updater downloads an APK over plain LAN HTTP (documented in docs/APP_UPDATES.md). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+
+    <!-- ===== Core instrumentation ===== -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Higher accelerometer/gyroscope rates (> 200 Hz) on Android 12+. Declared only because it may
+         be required; requested rate is configurable and the achieved rate is always measured. -->
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+
+    <!-- ===== Foreground recording (camera + IMU while screen off) ===== -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <!-- Notification for the recording foreground service (Android 13+). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- ===== Optional GPS ground truth (OFF by default; GPS-denied evaluation must remain possible) ===== -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <!-- Keep CPU alive during recording sessions. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- ===== Hardware features (not required, so the app installs on devices that lack them) ===== -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.gyroscope_limited" android:required="false" />
+    <!-- ARCore is an optional tracking diagnostic, never required for streaming or recording. -->
+    <uses-feature android:name="android.hardware.camera.ar" android:required="false" />
+
+    <application
+        android:name=".PrismApp"
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:hardwareAccelerated="true"
+        android:theme="@style/Theme.Prism"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout|density|uiMode"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.Prism"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Foreground service for synchronized camera + IMU recording.
+             Type "camera" is used when the camera is recording; IMU-only calibration
+             sessions run in-activity with the screen on, so no background sensor
+             type abuse occurs. GPS, when enabled, is sampled in-session. -->
+        <service
+            android:name=".service.RecordingService"
+            android:exported="false"
+            android:foregroundServiceType="camera|location"
+            android:stopWithTask="false" />
+
+        <!-- "optional" keeps PRISM installable on devices without Google Play Services for AR.
+             Tracking diagnostics then report UNSUPPORTED instead of hiding the feature. -->
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="optional" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+</manifest>

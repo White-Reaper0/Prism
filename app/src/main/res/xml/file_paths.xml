@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="sessions" path="sessions/" />
+    <files-path name="exports" path="exports/" />
+    <files-path name="updates" path="updates/" />
+    <cache-path name="cache" path="." />
+    <external-files-path name="external_sessions" path="sessions/" />
+    <external-files-path name="external_exports" path="exports/" />
+</paths>

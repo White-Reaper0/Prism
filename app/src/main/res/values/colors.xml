@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="prism_bg">#FF0B0E14</color>
+    <color name="prism_surface">#FF121723</color>
+    <color name="prism_accent">#FF36F1C5</color>
+</resources>
