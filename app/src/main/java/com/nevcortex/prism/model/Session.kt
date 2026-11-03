@@ -21,7 +21,8 @@ data class SessionConfig(
     val recordLinearAcceleration: Boolean = true,
     /** Requested IMU rate in Hz; the achieved rate is always measured. */
     val imuRateHz: Int = 400,
-    val cameraLensFacing: Int = 0,          // CameraSelector.LENS_FACING_BACK
+    /** LENS_FACING_BACK (1) — androidx.camera.core.CameraSelector.LENS_FACING_BACK. */
+    val cameraLensFacing: Int = com.nevcortex.prism.camera.CameraLens.BACK,
     val enableGpsGroundTruth: Boolean = false,
     val mounting: MountingConfig = MountingConfig.IDENTITY,
     val stabilization: CameraStabilization = CameraStabilization.OFF

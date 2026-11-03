@@ -470,6 +470,16 @@
     <string name="settings_add_orientation">Add orientation</string>
     <string name="settings_finish_calibration">Finish calibration</string>
     <string name="settings_windows_staged">Windows staged</string>
+    <string name="settings_provenance">Provenance</string>
+    <string name="settings_distortion">Distortion coefficients</string>
+    <string name="settings_reprojection_error">Reprojection error</string>
+    <string name="settings_intrinsics_saved">Saved image size</string>
+    <string name="settings_gyro_cal_title">Gyroscope calibration</string>
+    <string name="settings_gyro_cal_instructions">Place the phone on a stable, flat surface and do not touch or move it for 60 seconds. The app measures the gyroscope\u2019s zero-rate bias while completely still.</string>
+    <string name="settings_gyro_cal_button">Calibrate gyroscope (60 seconds)</string>
+    <string name="settings_gyro_cal_cancel">Cancel calibration</string>
+    <string name="settings_gyro_cal_collecting">Collecting… %1$d s of 60 s — %2$d samples</string>
+    <string name="settings_gyro_cal_failed">Not saved (cancelled or rejected). Existing calibration is untouched.</string>
     <string name="settings_intrinsics_note">Enter intrinsics produced by an offline calibration. Without them, no visual estimate should be treated as metric.</string>
     <string name="settings_save_intrinsics">Save intrinsics</string>
     <string name="settings_permissions_title">Permissions and synchronization</string>

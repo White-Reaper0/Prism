@@ -6,6 +6,38 @@ package com.nevcortex.prism.model
  */
 enum class CalibrationProvenance { ESTIMATED, FACTORY, USER_PROVIDED, UNKNOWN }
 
+/**
+ * Dedicated stationary gyroscope zero-rate bias, estimated independently of the
+ * accelerometer/multi-orientation calibration. Raw sensor samples are never corrected; this
+ * record establishes the bias only. Keep its provenance explicit.
+ */
+data class GyroCalibration(
+    val createdAtMs: Long,
+    val provenance: CalibrationProvenance,
+    val method: String,
+    val durationNs: Long,             // actual first-to-last sample span
+    val sampleCount: Int,
+    val biasRadS: FloatArray,        // per-axis mean rate while stationary (rad/s)
+    val noiseStdRadS: FloatArray,    // per-axis std while stationary (rad/s)
+    val stationary: Boolean,         // passed the stationarity validation
+    val note: String
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is GyroCalibration) return false
+        return createdAtMs == other.createdAtMs && method == other.method &&
+            sampleCount == other.sampleCount && biasRadS.contentEquals(other.biasRadS) &&
+            noiseStdRadS.contentEquals(other.noiseStdRadS) && stationary == other.stationary
+    }
+
+    override fun hashCode(): Int {
+        var h = createdAtMs.hashCode()
+        h = 31 * h + sampleCount
+        h = 31 * h + biasRadS.contentHashCode()
+        return h
+    }
+}
+
 data class ImuCalibration(
     val createdAtMs: Long,
     val provenance: CalibrationProvenance,
@@ -20,7 +52,12 @@ data class ImuCalibration(
     val gravityMagnitudeMs2: Float,          // observed |g| during stillness
     val gravityMagnitudeStdMs2: Float,
     val driftNote: String,                   // qualitative drift observation
-    val uncertaintyNote: String
+    val uncertaintyNote: String,
+    /**
+     * Optional dedicated stationary gyroscope calibration. When present it supersedes the gyro
+     * fields above for the dedicated 60 s measurement; when absent the legacy gyro bias stands.
+     */
+    val dedicatedGyro: GyroCalibration? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -28,7 +65,8 @@ data class ImuCalibration(
         return createdAtMs == other.createdAtMs && provenance == other.provenance &&
             accelerometerBiasMs2.contentEquals(other.accelerometerBiasMs2) &&
             gyroscopeBiasRadS.contentEquals(other.gyroscopeBiasRadS) &&
-            magnetometerBiasUt.contentEquals(other.magnetometerBiasUt)
+            magnetometerBiasUt.contentEquals(other.magnetometerBiasUt) &&
+            dedicatedGyro == other.dedicatedGyro
     }
 
     override fun hashCode(): Int {

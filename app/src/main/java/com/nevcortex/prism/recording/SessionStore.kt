@@ -93,7 +93,7 @@ class SessionStore(context: Context) {
                 recordGravity = rec.optBoolean("gravity", true),
                 recordLinearAcceleration = rec.optBoolean("linearAcceleration", true),
                 imuRateHz = cfg.optInt("imuRateHz", 400),
-                cameraLensFacing = cfg.optInt("cameraLensFacing", 0),
+                cameraLensFacing = cfg.optInt("cameraLensFacing", com.nevcortex.prism.camera.CameraLens.BACK),
                 enableGpsGroundTruth = cfg.optBoolean("enableGpsGroundTruth", false),
                 mounting = when (cfg.optString("mounting", MountingConfig.IDENTITY.name)) {
                     MountingConfig.FLAT_SCREEN_UP.name -> MountingConfig.FLAT_SCREEN_UP

@@ -85,7 +85,10 @@ fun MissionScreen(container: AppContainer) {
             MetricRow("capture mode", s.captureMode.name)
             MetricRow("requested IMU rate", "${s.imuRateHz}", "Hz")
             MetricRow("target analysis fps", "%.0f".format(s.targetAnalysisFps))
-            MetricRow("lens", if (s.lensFacing == 0) "back" else "front")
+            MetricRow(
+                "lens",
+                if (s.lensFacing == com.nevcortex.prism.camera.CameraLens.BACK) "back" else "front"
+            )
             MetricRow("stabilization", s.stabilization.name)
             MetricRow("mounting", s.mountingName)
             MetricRow("GPS ground truth", if (s.enableGps) "ON" else "off")

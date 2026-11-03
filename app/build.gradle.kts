@@ -25,8 +25,8 @@ android {
         // Android 11 minimum; first test device is a OnePlus Nord 4 on OxygenOS 16.
         minSdk = 30
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.2.1-live"
+        versionCode = 4
+        versionName = "3.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }

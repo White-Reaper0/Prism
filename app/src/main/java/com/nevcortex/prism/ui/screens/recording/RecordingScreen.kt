@@ -278,7 +278,7 @@ fun RecordingScreen(container: AppContainer, onOpenRecordings: () -> Unit) {
             )
             MetricRow(
                 stringResource(R.string.settings_lens_label),
-                if (settings.lensFacing == 0) stringResource(R.string.settings_lens_back)
+                if (settings.lensFacing == com.nevcortex.prism.camera.CameraLens.BACK) stringResource(R.string.settings_lens_back)
                 else stringResource(R.string.settings_lens_front),
                 mono = false
             )

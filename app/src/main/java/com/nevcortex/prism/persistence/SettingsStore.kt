@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.nevcortex.prism.core.coords.MountingConfig
 import com.nevcortex.prism.model.CameraCaptureMode
+import com.nevcortex.prism.camera.CameraLens
 import com.nevcortex.prism.model.CameraStabilization
 import com.nevcortex.prism.model.SessionConfig
 import com.nevcortex.prism.stream.StreamQuality
@@ -19,6 +20,24 @@ class SettingsStore(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("prism_settings", Context.MODE_PRIVATE)
 
+    init {
+        migrateLensFacing()
+    }
+
+    /**
+     * The stored lensFacing used to be written under the broken 0 = back / 1 = front mapping
+     * (CameraX actually has FRONT = 0, BACK = 1 — see CameraLens). Rewrite old values once so an
+     * existing user's rear selection stays rear rather than silently flipping to the front lens.
+     */
+    private fun migrateLensFacing() {
+        if (prefs.getInt(K_LENS_VERSION, 1) >= 2) return
+        if (prefs.contains(K_LENS)) {
+            val old = prefs.getInt(K_LENS, CameraLens.BACK)
+            prefs.edit().putInt(K_LENS, LensCompat.migrateStoredLensFacing(old)).apply()
+        }
+        prefs.edit().putInt(K_LENS_VERSION, 2).apply()
+    }
+
     var imuRateHz: Int
         get() = prefs.getInt(K_IMU_RATE, 400)
         set(v) = prefs.edit().putInt(K_IMU_RATE, v).apply()
@@ -28,8 +47,8 @@ class SettingsStore(context: Context) {
         set(v) = prefs.edit().putString(K_MODE, v.name).apply()
 
     var lensFacing: Int
-        get() = prefs.getInt(K_LENS, 0) // 0 = back
-        set(v) = prefs.edit().putInt(K_LENS, v).apply()
+        get() = prefs.getInt(K_LENS, CameraLens.BACK)
+        set(v) = prefs.edit().putInt(K_LENS, CameraLens.normalize(v)).apply()
 
     var stabilization: CameraStabilization
         get() = CameraStabilization.valueOf(prefs.getString(K_STAB, CameraStabilization.OFF.name)!!)
@@ -99,6 +118,7 @@ class SettingsStore(context: Context) {
         private const val K_IMU_RATE = "imuRateHz"
         private const val K_MODE = "captureMode"
         private const val K_LENS = "lensFacing"
+        private const val K_LENS_VERSION = "lensFacingVersion"
         private const val K_STAB = "stabilization"
         private const val K_GPS = "enableGps"
         private const val K_FPS = "targetAnalysisFps"

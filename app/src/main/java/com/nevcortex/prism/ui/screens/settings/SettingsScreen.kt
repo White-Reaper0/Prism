@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -20,6 +21,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +38,7 @@ import com.nevcortex.prism.core.coords.MountingConfig
 import com.nevcortex.prism.di.AppContainer
 import com.nevcortex.prism.model.CameraCaptureMode
 import com.nevcortex.prism.model.CameraStabilization
+import com.nevcortex.prism.camera.CameraLens
 import com.nevcortex.prism.stream.StreamQuality
 import com.nevcortex.prism.ui.components.ExpandableSection
 import com.nevcortex.prism.ui.components.InlineNotice
@@ -50,6 +53,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(container: AppContainer) {
     val scope = rememberCoroutineScope()
     val s = container.settingsStore
+    val gyroProgress by container.gyroscopeCalibrator.progress.collectAsState()
 
     var imuRate by remember { mutableStateOf(s.imuRateHz.toFloat()) }
     var fps by remember { mutableStateOf(s.targetAnalysisFps) }
@@ -67,12 +71,15 @@ fun SettingsScreen(container: AppContainer) {
 
     val calWindows = remember { mutableStateListOf<com.nevcortex.prism.calibration.ImuCalibration.Window>() }
 
-    var fx by remember { mutableStateOf("") }
-    var fy by remember { mutableStateOf("") }
-    var cx by remember { mutableStateOf("") }
-    var cy by remember { mutableStateOf("") }
-    var iw by remember { mutableStateOf("") }
-    var ih by remember { mutableStateOf("") }
+    // Restore saved intrinsics into the input fields; empty only when nothing is saved.
+    // A restart recreates the store from camera.json, so the values reappear automatically.
+    val savedCamera = container.calibrationStore.camera
+    var fx by remember { mutableStateOf(savedCamera?.fx.asField()) }
+    var fy by remember { mutableStateOf(savedCamera?.fy.asField()) }
+    var cx by remember { mutableStateOf(savedCamera?.cx.asField()) }
+    var cy by remember { mutableStateOf(savedCamera?.cy.asField()) }
+    var iw by remember { mutableStateOf(savedCamera?.imageWidth?.takeIf { it > 0 }?.toString() ?: "") }
+    var ih by remember { mutableStateOf(savedCamera?.imageHeight?.takeIf { it > 0 }?.toString() ?: "") }
 
     Column(
         Modifier
@@ -216,13 +223,13 @@ fun SettingsScreen(container: AppContainer) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 FilterChip(
-                    selected = lens == 0,
-                    onClick = { lens = 0; s.lensFacing = 0 },
+                    selected = lens == CameraLens.BACK,
+                    onClick = { lens = CameraLens.BACK; s.lensFacing = CameraLens.BACK },
                     label = { Text(stringResource(R.string.settings_lens_back)) }
                 )
                 FilterChip(
-                    selected = lens == 1,
-                    onClick = { lens = 1; s.lensFacing = 1 },
+                    selected = lens == CameraLens.FRONT,
+                    onClick = { lens = CameraLens.FRONT; s.lensFacing = CameraLens.FRONT },
                     label = { Text(stringResource(R.string.settings_lens_front)) }
                 )
             }
@@ -268,7 +275,10 @@ fun SettingsScreen(container: AppContainer) {
                     onClick = {
                         mount = m.name
                         s.mountingName = m.name
-                        container.calibrationStore.saveMounting(m)
+                        scope.launch {
+                            runCatching { container.calibrationStore.saveMounting(m) }
+                                .onFailure { status = "Mounting save failed: ${it.message ?: it.javaClass.simpleName}" }
+                        }
                     },
                     label = { Text(m.name) }
                 )
@@ -309,14 +319,20 @@ fun SettingsScreen(container: AppContainer) {
             OutlinedButton(
                 onClick = {
                     scope.launch {
-                        status = "Keep the phone still for 4 seconds…"
-                        val window = container.imuCalibration.collectWindow(4000)
-                        val calibration = container.imuCalibration.stationaryCalibration(window)
-                        container.calibrationStore.saveImu(calibration)
-                        status = "Stationary calibration saved. Still: ${window.stationary}. ${window.note}"
+                        runCatching {
+                            status = "Keep the phone still for 4 seconds (stillness window)…"
+                            val window = container.imuCalibration.collectWindow(4000)
+                            val calibration = container.imuCalibration.stationaryCalibration(window)
+                            // Persist FIRST; only report success when the save actually happened.
+                            container.calibrationStore.saveImu(calibration)
+                            status = "Stationary calibration saved. Still: ${window.stationary}. ${window.note}"
+                        }.onFailure {
+                            status = "Calibration failed: ${it.message ?: it.javaClass.simpleName}"
+                        }
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !gyroProgress.running
             ) {
                 Text(stringResource(R.string.settings_stationary_calibration))
             }
@@ -330,13 +346,18 @@ fun SettingsScreen(container: AppContainer) {
                 OutlinedButton(
                     onClick = {
                         scope.launch {
-                            status = "Collecting orientation window ${calWindows.size + 1}…"
-                            val window = container.imuCalibration.collectWindow(3000)
-                            calWindows.add(window)
-                            status = "Window ${calWindows.size} added. Still: ${window.stationary}"
+                            runCatching {
+                                status = "Collecting orientation window ${calWindows.size + 1}…"
+                                val window = container.imuCalibration.collectWindow(3000)
+                                calWindows.add(window)
+                                status = "Window ${calWindows.size} added. Still: ${window.stationary}"
+                            }.onFailure {
+                                status = "Window collection failed: ${it.message ?: it.javaClass.simpleName}"
+                            }
                         }
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = !gyroProgress.running
                 ) {
                     Text(stringResource(R.string.settings_add_orientation))
                 }
@@ -344,25 +365,126 @@ fun SettingsScreen(container: AppContainer) {
                     onClick = {
                         if (calWindows.size >= 2) {
                             runCatching {
-                                container.imuCalibration.multiOrientationCalibration(calWindows.toList())
+                                // Calculation and persistence stay in ONE exception domain:
+                                // a save failure must not crash or clear the staged windows.
+                                val calibration = container.imuCalibration.multiOrientationCalibration(calWindows.toList())
+                                container.calibrationStore.saveImu(calibration)
                             }.onSuccess {
-                                container.calibrationStore.saveImu(it)
                                 status = "Multi-orientation calibration saved."
-                                calWindows.clear()
+                                calWindows.clear()  // cleared only after persistence succeeded
                             }.onFailure {
-                                status = "Calibration failed: ${it.message}"
+                                status = "Calibration failed: ${it.message ?: it.javaClass.simpleName}. Staged windows kept."
                             }
                         } else {
                             status = "Add at least two orientation windows."
                         }
                     },
-                    enabled = calWindows.size >= 2,
+                    enabled = calWindows.size >= 2 && !gyroProgress.running,
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(stringResource(R.string.settings_finish_calibration))
                 }
             }
             MetricRow(stringResource(R.string.settings_windows_staged), calWindows.size.toString())
+        }
+
+        ExpandableSection(stringResource(R.string.settings_gyro_cal_title)) {
+            val currentGyro = container.calibrationStore.imu?.dedicatedGyro
+            Text(
+                stringResource(R.string.settings_gyro_cal_instructions),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(Spacing.sm))
+            if (gyroProgress.running) {
+                LinearProgressIndicator(
+                    progress = { (gyroProgress.elapsedMs / 60_000f).coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(Spacing.xs))
+                Text(
+                    stringResource(
+                        R.string.settings_gyro_cal_collecting,
+                        (gyroProgress.elapsedMs / 1000).toInt(),
+                        gyroProgress.sampleCount
+                    ),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(Modifier.height(Spacing.xs))
+                OutlinedButton(
+                    onClick = { container.gyroscopeCalibrator.cancel() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_gyro_cal_cancel))
+                }
+            } else {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            val outcome = container.gyroscopeCalibrator.collect(60_000L)
+                            when (outcome) {
+                                is com.nevcortex.prism.calibration.GyroBiasEstimator.Outcome.Accepted -> {
+                                    runCatching {
+                                        container.calibrationStore.saveDedicatedGyro(outcome.calibration)
+                                    }.onSuccess {
+                                        status = "Gyroscope calibration saved " +
+                                            "(${outcome.calibration.sampleCount} samples, " +
+                                            "%.1f s).".format(outcome.calibration.durationNs / 1e9)
+                                    }.onFailure {
+                                        status = "Gyroscope calibration could not be saved: " +
+                                            "${it.message ?: it.javaClass.simpleName}. Existing calibration is untouched."
+                                    }
+                                }
+                                is com.nevcortex.prism.calibration.GyroBiasEstimator.Outcome.Rejected ->
+                                    status = "Gyroscope calibration rejected: ${outcome.reason}"
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_gyro_cal_button))
+                }
+            }
+            if (currentGyro != null) {
+                Spacer(Modifier.height(Spacing.sm))
+                MetricRow(
+                    stringResource(R.string.settings_method),
+                    currentGyro.method,
+                    mono = false
+                )
+                MetricRow(
+                    stringResource(R.string.settings_provenance),
+                    currentGyro.provenance.name,
+                    mono = false
+                )
+                MetricRow(
+                    "Samples",
+                    "%d (%.1f s)".format(currentGyro.sampleCount, currentGyro.durationNs / 1e9),
+                    mono = false
+                )
+                MetricRow(
+                    "Bias X, Y, Z (rad/s)",
+                    currentGyro.biasRadS.joinToString(", ") { "%.5f".format(it) },
+                    mono = false
+                )
+                MetricRow(
+                    "Noise std X, Y, Z (rad/s)",
+                    currentGyro.noiseStdRadS.joinToString(", ") { "%.5f".format(it) },
+                    mono = false
+                )
+                MetricRow(
+                    "Stationarity validation",
+                    if (currentGyro.stationary) "Passed" else "Failed",
+                    mono = false
+                )
+            } else if (!gyroProgress.running) {
+                Spacer(Modifier.height(Spacing.sm))
+                Text(
+                    stringResource(R.string.settings_gyro_cal_failed),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         ExpandableSection(stringResource(R.string.settings_camera_intrinsics)) {
@@ -372,6 +494,33 @@ fun SettingsScreen(container: AppContainer) {
                 current?.method ?: stringResource(R.string.diag_none),
                 mono = false
             )
+            MetricRow(
+                stringResource(R.string.settings_provenance),
+                current?.provenance?.name ?: stringResource(R.string.diag_none),
+                mono = false
+            )
+            if (current != null) {
+                val finiteDistortion = current.distortionCoeffs.filter { it.isFinite() }
+                if (finiteDistortion.isNotEmpty()) {
+                    MetricRow(
+                        stringResource(R.string.settings_distortion),
+                        finiteDistortion.joinToString(", ") { "%.5f".format(it) },
+                        mono = false
+                    )
+                }
+                if (current.reprojectionErrorPx.isFinite() && current.reprojectionErrorPx >= 0f) {
+                    MetricRow(
+                        stringResource(R.string.settings_reprojection_error),
+                        "%.3f px".format(current.reprojectionErrorPx),
+                        mono = false
+                    )
+                }
+                MetricRow(
+                    stringResource(R.string.settings_intrinsics_saved),
+                    "${current.imageWidth} × ${current.imageHeight}",
+                    mono = false
+                )
+            }
             Text(
                 stringResource(R.string.settings_intrinsics_note),
                 style = MaterialTheme.typography.bodySmall,
@@ -473,6 +622,9 @@ fun SettingsScreen(container: AppContainer) {
         Spacer(Modifier.height(Spacing.xl))
     }
 }
+
+private fun Float?.asField(): String =
+    if (this != null && isFinite()) toString() else ""
 
 @Composable
 private fun QualityOption(

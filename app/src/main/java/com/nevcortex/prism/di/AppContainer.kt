@@ -7,6 +7,7 @@ import com.nevcortex.prism.camera.CameraRepository
 import com.nevcortex.prism.camera.FrameCollector
 import com.nevcortex.prism.calibration.CalibrationStore
 import com.nevcortex.prism.calibration.CameraCalibration
+import com.nevcortex.prism.calibration.GyroscopeCalibrator
 import com.nevcortex.prism.calibration.ImuCalibration
 import com.nevcortex.prism.dataset.DatasetExporter
 import com.nevcortex.prism.evidence.FileBeliefLedger
@@ -77,6 +78,7 @@ class AppContainer(context: Context) {
     val recordingState = MutableStateFlow(RecordingState())
 
     val imuCalibration = ImuCalibration(appContext)
+    val gyroscopeCalibrator = GyroscopeCalibrator(appContext)
     val cameraCalibration = CameraCalibration(appContext)
 
     val datasetExporter = DatasetExporter(appContext)

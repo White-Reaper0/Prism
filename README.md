@@ -10,9 +10,9 @@
 [![API](https://img.shields.io/badge/API-30%2B%20%28minSdk%29-blue?style=flat-square)](https://developer.android.com/about/versions/11)
 [![compileSdk](https://img.shields.io/badge/compileSdk-36-blue?style=flat-square)](https://developer.android.com/about/versions/16)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)](#build)
-[![Tests](https://img.shields.io/badge/tests-25%20JVM%20%7C%2013%20Python-brightgreen?style=flat-square)](#tests)
+[![Tests](https://img.shields.io/badge/tests-49%20JVM%20%7C%2013%20Python-brightgreen?style=flat-square)](#tests)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.1--live-informational?style=flat-square)](app/build.gradle.kts)
+[![Version](https://img.shields.io/badge/version-3.0.1-informational?style=flat-square)](app/build.gradle.kts)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-purple?style=flat-square&logo=kotlin)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-BOM%202024.12-purple?style=flat-square&logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
 
@@ -203,7 +203,7 @@ Debug application ID: `com.nevcortex.prism.debug`
 ### Tests
 
 ```powershell
-# JVM unit tests (25 tests — no device required)
+# JVM unit tests (49 tests — no device required)
 .\gradlew.bat :app:testDebugUnitTest
 
 # Python receiver tests (13 tests — loopback sockets, no phone required)
@@ -291,7 +291,7 @@ The calibration script is `app/prism_calibration/calibration.py`. Re-run it on y
 | Claim | Verified? |
 |---|---|
 | Debug APK builds (`app-debug.apk`, ~61 MB) | ✅ JDK 21 + Gradle 8.11.1 |
-| JVM unit tests pass (25/25) | ✅ |
+| JVM unit tests pass (49/49) | ✅ |
 | Python receiver tests pass (13/13) | ✅ |
 | Live streaming works on Nord 4 | ✅ measured 196 Hz gyro, 35 s session |
 | Camera calibration RMS < 0.3 px | ✅ 0.246 px on 69 images |

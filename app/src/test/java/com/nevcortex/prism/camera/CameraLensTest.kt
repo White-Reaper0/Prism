@@ -1,16 +1,26 @@
 package com.nevcortex.prism.camera
 
+import com.nevcortex.prism.persistence.LensCompat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Pure front/rear lens rules. These run on the JVM and pin the contract the camera binder,
- * the live-stream session, and the Settings/Live Studio UI all rely on. The int values match
- * androidx.camera.core.CameraSelector (BACK = 0, FRONT = 1).
+ * Front/rear lens rules. These run on the JVM and pin the contract the camera binder, the
+ * live-stream session, and the Settings/Live Studio UI rely on.
+ *
+ * The int values MUST match androidx.camera.core.CameraSelector — verified against
+ * camera-core-1.4.1 with `javap -v`: LENS_FACING_FRONT = 0, LENS_FACING_BACK = 1. A previous
+ * revision of this file encoded BACK = 0 / FRONT = 1, which bound the opposite camera.
  */
 class CameraLensTest {
+
+    @Test
+    fun `lens constants match CameraX - BACK is 1, FRONT is 0`() {
+        assertEquals(1, CameraLens.BACK)
+        assertEquals(0, CameraLens.FRONT)
+    }
 
     @Test
     fun `normalize maps unknown values onto the rear default`() {
@@ -25,7 +35,7 @@ class CameraLensTest {
         val lenses = listOf(CameraLens.BACK, CameraLens.FRONT)
         assertTrue(CameraLens.selectable(CameraLens.BACK, lenses))
         assertTrue(CameraLens.selectable(CameraLens.FRONT, lenses))
-        assertTrue(CameraLens.reported(lenses).containsAll(listOf(0, 1)))
+        assertEquals(listOf(1, 0), CameraLens.reported(lenses))    // BACK first
     }
 
     @Test
@@ -33,7 +43,15 @@ class CameraLensTest {
         val backOnly = listOf(CameraLens.BACK)
         assertTrue(CameraLens.selectable(CameraLens.BACK, backOnly))
         assertFalse(CameraLens.selectable(CameraLens.FRONT, backOnly))
-        assertTrue(CameraLens.selectable(CameraLens.FRONT, listOf(CameraLens.FRONT)))
+        assertEquals(CameraLens.BACK, CameraLens.resolve(CameraLens.FRONT, backOnly))
+    }
+
+    @Test
+    fun `reported keeps BACK first even when FRONT is reported first`() {
+        assertEquals(
+            listOf(CameraLens.BACK, CameraLens.FRONT),
+            CameraLens.reported(listOf(CameraLens.FRONT, CameraLens.BACK))
+        )
     }
 
     @Test
@@ -58,7 +76,6 @@ class CameraLensTest {
 
     @Test
     fun `resolve falls back to rear when nothing is reported`() {
-        // Matches CameraRepository.availableLenses()'s conservative empty fallback.
         assertEquals(CameraLens.BACK, CameraLens.resolve(CameraLens.FRONT, emptyList()))
         assertEquals(CameraLens.BACK, CameraLens.resolve(CameraLens.BACK, emptyList()))
     }
@@ -69,5 +86,14 @@ class CameraLensTest {
             listOf(CameraLens.BACK, CameraLens.FRONT),
             CameraLens.reported(listOf(CameraLens.FRONT, 7, CameraLens.BACK, CameraLens.FRONT))
         )
+    }
+
+    @Test
+    fun `legacy stored lensFacing values migrate to the CameraX mapping`() {
+        // Old encoding: 0 = back, 1 = front.  New encoding: FRONT = 0, BACK = 1.
+        assertEquals(CameraLens.BACK, LensCompat.migrateStoredLensFacing(0))
+        assertEquals(CameraLens.FRONT, LensCompat.migrateStoredLensFacing(1))
+        // Any other legacy garbage resolves to rear.
+        assertEquals(CameraLens.BACK, LensCompat.migrateStoredLensFacing(9))
     }
 }
