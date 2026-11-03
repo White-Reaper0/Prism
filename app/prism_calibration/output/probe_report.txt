@@ -1,0 +1,43 @@
+Total images: 105
+
+Resolutions found (2 distinct):
+  1600x715: 73 images
+  715x1600: 32 images
+
+--- Corner detection probe (first 10 images) ---
+  WhatsApp Image 2026-11-03 at 2.03.13 PM.jpeg: detected ['(5, 3)', '(5, 4)', '(6, 4)', '(8, 4)', '(6, 5)', '(8, 5)', '(5, 6)', '(8, 6)']
+  WhatsApp Image 2026-11-03 at 2.03.14 PM (1).jpeg: detected ['(5, 3)', '(5, 4)', '(6, 4)', '(8, 4)', '(6, 5)', '(5, 6)', '(8, 6)']
+  WhatsApp Image 2026-11-03 at 2.03.14 PM (2).jpeg: detected ['(5, 3)', '(5, 4)', '(6, 4)', '(8, 6)']
+  WhatsApp Image 2026-11-03 at 2.03.14 PM.jpeg: detected ['(5, 3)', '(5, 4)', '(6, 4)', '(7, 4)', '(8, 4)', '(5, 6)', '(8, 6)']
+  WhatsApp Image 2026-11-03 at 2.03.15 PM (1).jpeg: detected ['(5, 3)', '(5, 4)', '(6, 4)', '(8, 6)']
+  WhatsApp Image 2026-11-03 at 2.03.15 PM.jpeg: detected ['(5, 3)', '(5, 4)', '(6, 4)', '(8, 6)']
+  WhatsApp Image 2026-11-03 at 2.03.16 PM (1).jpeg: detected ['(5, 3)', '(6, 4)', '(8, 4)', '(6, 5)', '(7, 5)', '(5, 6)', '(7, 6)', '(8, 6)', '(5, 7)']
+  WhatsApp Image 2026-11-03 at 2.03.16 PM.jpeg: detected ['(5, 3)', '(5, 4)', '(6, 4)', '(6, 5)', '(5, 6)', '(8, 6)']
+  WhatsApp Image 2026-11-03 at 2.03.17 PM.jpeg: detected ['(5, 3)', '(5, 4)', '(6, 4)', '(8, 4)', '(6, 5)', '(5, 6)', '(8, 6)']
+  WhatsApp Image 2026-11-03 at 2.03.18 PM (1).jpeg: detected ['(5, 3)', '(6, 4)', '(8, 4)', '(6, 5)', '(5, 6)', '(8, 6)']
+
+--- Summary: configs that worked on at least 1 of the first 10 images ---
+  (5, 3): 10/10 images
+  (6, 4): 10/10 images
+  (8, 6): 10/10 images
+  (5, 4): 8/10 images
+  (5, 6): 7/10 images
+  (8, 4): 6/10 images
+  (6, 5): 6/10 images
+  (8, 5): 1/10 images
+  (7, 4): 1/10 images
+  (7, 5): 1/10 images
+  (7, 6): 1/10 images
+  (5, 7): 1/10 images
+
+--- Full-set scan for top 5 configs ---
+  Config (5, 3): 101/105 images accepted (SB)
+  Config (6, 4): 94/105 images accepted (SB)
+  Config (8, 6): 96/105 images accepted (SB)
+  Config (5, 4): 83/105 images accepted (SB)
+  Config (5, 6): 59/105 images accepted (SB)
+
+--- Saving annotated sample images ---
+  Saved: output\probe_cfg5x3_WhatsApp Image 2026-11-03 at 2.03.13 PM.jpeg
+  Saved: output\probe_cfg6x4_WhatsApp Image 2026-11-03 at 2.03.13 PM.jpeg
+  Saved: output\probe_cfg8x6_WhatsApp Image 2026-11-03 at 2.03.13 PM.jpeg
