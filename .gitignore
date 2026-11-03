@@ -34,3 +34,7 @@ __pycache__/
 
 # --- Scratch files ---
 clean_status.txt
+
+# --- Calibration images and generated output (large, not source) ---
+app/prism_calibration/images/
+app/prism_calibration/output/
